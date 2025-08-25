@@ -311,4 +311,63 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get scanToAddProducts => 'Сканируйте, чтобы добавить товары';
+
+  @override
+  String get item => 'товар';
+
+  @override
+  String get quantity => 'Кол';
+
+  @override
+  String get addToCart => 'Добавить в корзину';
+
+  @override
+  String get itemsAddedToCart => 'товаров добавлено в корзину';
+
+  @override
+  String get removeFromCart => 'Удалить из корзины';
+
+  @override
+  String get removeFromCartConfirmation =>
+      'Вы уверены, что хотите удалить этот заказ из корзины?';
+
+  @override
+  String get orderRemovedFromCart => 'Заказ удалён из корзины';
+
+  @override
+  String get remove => 'Удалить';
+
+  @override
+  String get deliveryTimeRange => 'Диапазон времени доставки';
+
+  @override
+  String get fromDate => 'С';
+
+  @override
+  String get toDate => 'До';
+
+  @override
+  String get selectStartDate => 'Выберите дату начала';
+
+  @override
+  String get selectEndDate => 'Выберите дату окончания';
+
+  @override
+  String get selectStartTime => 'Выберите время начала';
+
+  @override
+  String get selectEndTime => 'Выберите время окончания';
+
+  @override
+  String get deliveryWindow => 'Окно доставки';
+
+  @override
+  String get between => 'между';
+
+  @override
+  String get and => 'и';
+
+  @override
+  String get youCanDeliverBetween =>
+      'Вы можете доставить мой заказ между этими датами';
 }

@@ -248,8 +248,9 @@ class HistoryOrderCard extends StatelessWidget {
                       color: AppColors.grayColor,
                     ),
                   ),
-                  // Show delivery time for pending orders
-                  if (isPending && (order.deliveryDate != null || order.deliveryTime != null))
+                  // Show delivery time for pending orders - only clock icon
+                  if (isPending && (order.deliveryDate != null || order.deliveryTime != null || 
+                      (order.deliveryStartDate != null && order.deliveryEndDate != null)))
                     Column(
                       children: [
                         const SizedBox(height: 4),
@@ -259,15 +260,6 @@ class HistoryOrderCard extends StatelessWidget {
                               Icons.schedule,
                               size: 12,
                               color: AppColors.grayColor,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              _formatDeliveryInfo(order.deliveryDate, order.deliveryTime),
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.grayColor,
-                                fontStyle: FontStyle.italic,
-                              ),
                             ),
                           ],
                         ),
@@ -326,15 +318,6 @@ class HistoryOrderCard extends StatelessWidget {
 
 
 
-  String _formatDeliveryInfo(String? deliveryDate, String? deliveryTime) {
-    if (deliveryDate != null && deliveryTime != null) {
-      return 'Delivery: $deliveryDate at $deliveryTime';
-    } else if (deliveryDate != null) {
-      return 'Delivery: $deliveryDate';
-    } else if (deliveryTime != null) {
-      return 'Delivery at: $deliveryTime';
-    }
-    return '';
-  }
+
 
 }

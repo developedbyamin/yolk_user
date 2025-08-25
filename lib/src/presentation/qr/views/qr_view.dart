@@ -54,7 +54,10 @@ class _QrViewState extends State<QrView> {
           });
           // Restart scanner when bottom sheet closes
           _scannerController?.start();
-          Navigator.pop(context);
+          // Only pop if we can actually pop (avoid double pop)
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
         } else if (state is QrError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -172,10 +175,69 @@ class _QrViewState extends State<QrView> {
               color: Colors.white.withOpacity(0.3),
             ),
           ),
+
+          // Floating indicator for scanned products
+          if (state is QrProductsLoaded && state.products.isNotEmpty && !_isBottomSheetOpen)
+            Positioned(
+              bottom: 80,
+              right: 20,
+              child: _buildFloatingIndicator(context, state.products),
+            ),
         ],
       ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildFloatingIndicator(BuildContext context, List<ProductModel> products) {
+    final localizations = context.localizations;
+    final totalItems = products.length;
+    
+    return GestureDetector(
+      onTap: () {
+        // Show the bottom sheet when indicator is tapped
+        context.read<QrCubit>().showBottomSheet();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.green,
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.shopping_cart,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '$totalItems ${totalItems == 1 ? localizations.item : localizations.items}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(
+              Icons.keyboard_arrow_up,
+              color: Colors.white,
+              size: 16,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -187,13 +249,21 @@ class _QrViewState extends State<QrView> {
       backgroundColor: Colors.transparent,
       isDismissible: true,
       enableDrag: true,
-      builder: (context) => DraggableScrollableSheet(
+      useRootNavigator: false, // Important for GoRouter
+      builder: (modalContext) => DraggableScrollableSheet(
         initialChildSize: 0.5,
         minChildSize: 0.35,
         maxChildSize: 1,
-        builder: (context, scrollController) => ProductListBottomSheet(
+        builder: (sheetContext, scrollController) => ProductListBottomSheet(
           products: products,
           scrollController: scrollController,
+          onProductsCleared: () {
+            // Mark bottom sheet as closing to prevent listener interference
+            setState(() {
+              _isBottomSheetOpen = false;
+            });
+            context.read<QrCubit>().resetScanning();
+          },
         ),
       ),
     ).then((_) {

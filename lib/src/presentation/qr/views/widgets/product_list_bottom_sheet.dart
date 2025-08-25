@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:yolla/core/config/constants/app_colors.dart';
 import 'package:yolla/core/extensions/localization_extension.dart';
 import 'package:yolla/src/data/models/product/product_model.dart';
 import 'package:yolla/src/presentation/qr/viewmodel/qr_cubit.dart';
 import 'package:yolla/src/presentation/qr/viewmodel/qr_state.dart';
 import 'package:yolla/src/presentation/checkout/checkout_view.dart';
+import 'package:yolla/src/presentation/history/viewmodel/order_cubit.dart';
 
 class ProductListBottomSheet extends StatelessWidget {
   final List<ProductModel> products;
   final ScrollController? scrollController;
+  final VoidCallback? onProductsCleared;
 
   const ProductListBottomSheet({
     super.key,
     required this.products,
     this.scrollController,
+    this.onProductsCleared,
   });
 
   @override
@@ -135,44 +139,94 @@ class ProductListBottomSheet extends StatelessWidget {
                 ),
               ),
               
-              // Action Buttons Row
+              // Action Buttons Column
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
-                child: Row(
+                child: Column(
                   children: [
-                    // Add Product Button (Continue Scanning)
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Close bottom sheet and continue scanning
-                          context.read<QrCubit>().hideBottomSheet();
-                          Navigator.pop(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.lightGrayColor,
-                          foregroundColor: AppColors.grayColor,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    // First Row: Add Product and Add to Cart
+                    Row(
+                      children: [
+                        // Add Product Button (Continue Scanning)
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // Close bottom sheet and continue scanning
+                              context.read<QrCubit>().hideBottomSheet();
+                              Navigator.pop(context);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.lightGrayColor,
+                              foregroundColor: AppColors.grayColor,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              localizations.addProduct,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.grayColor,
+                              ),
+                            ),
                           ),
                         ),
-                        child: Text(
-                          localizations.addProduct,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.grayColor,
+                        
+                        const SizedBox(width: 12),
+                        
+                        // Add to Cart Button
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              final selectedProducts = currentProducts.where((p) => p.quantity > 0).toList();
+                              
+                              if (selectedProducts.isNotEmpty) {
+                                // Add to history
+                                await context.read<OrderCubit>().addToCart(selectedProducts);
+                                
+                                // Clear current QR list via callback
+                                onProductsCleared?.call();
+                                
+                                // Close bottom sheet
+                                context.pop();
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(localizations.pleaseAddProducts),
+                                    backgroundColor: Colors.orange,
+                                  ),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              localizations.addToCart,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.whiteColor,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                     
-                    const SizedBox(width: 12),
+                    const SizedBox(height: 12),
                     
-                    // Checkout Button
-                    Expanded(
+                    // Second Row: Checkout Button (Full Width)
+                    SizedBox(
+                      width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
                           final selectedProducts = currentProducts.where((p) => p.quantity > 0).toList();

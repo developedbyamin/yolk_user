@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:barcode_widget/barcode_widget.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:yolla/core/config/constants/app_colors.dart';
 import 'package:yolla/core/extensions/localization_extension.dart';
 import 'package:yolla/src/data/models/product/product_model.dart';
 import 'package:yolla/src/data/models/order/order_model.dart';
+import 'package:yolla/src/presentation/history/viewmodel/order_cubit.dart';
 
 class OrderDetailsView extends StatelessWidget {
   final OrderModel order;
@@ -240,74 +242,11 @@ class OrderDetailsView extends StatelessWidget {
                   
                   const SizedBox(height: 16),
                   
-                  // Order Information
-                  if (order.deliveryDate != null || order.deliveryTime != null)
-                    Row(
-                      children: [
-                        // Order Date
-                        if (order.deliveryDate != null)
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: AppColors.lightGrayColor,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Order Date',
-                                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.grayColor),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    order.deliveryDate!,
-                                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.blackColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        
-                        if (order.deliveryDate != null && order.deliveryTime != null)
-                          const SizedBox(width: 12),
-                        
-                        // Order Time
-                        if (order.deliveryTime != null)
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: AppColors.lightGrayColor,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Order Time',
-                                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.grayColor),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    order.deliveryTime!,
-                                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.blackColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                  // Delivery Information
+                  _buildDeliveryInfo(context, order),
                   
-                  if (order.deliveryDate != null || order.deliveryTime != null)
+                  if (order.deliveryDate != null || order.deliveryTime != null || 
+                      (order.deliveryStartDate != null && order.deliveryEndDate != null))
                     const SizedBox(height: 16),
                   
                   // Order Status
@@ -333,6 +272,46 @@ class OrderDetailsView extends StatelessWidget {
                       ),
                     ),
                   ),
+
+                  // Delete Button (only for pending orders)
+                  if (order.status.toLowerCase() == 'pending') ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _showDeleteConfirmation(context, order, localizations);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.delete_outline,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              localizations.removeFromCart,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -340,6 +319,154 @@ class OrderDetailsView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildDeliveryInfo(BuildContext context, OrderModel order) {
+    final localizations = context.localizations;
+    
+    // Check if we have new date range format
+    if (order.deliveryStartDate != null && order.deliveryEndDate != null &&
+        order.deliveryStartTime != null && order.deliveryEndTime != null) {
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.lightGrayColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                const Icon(
+                  Icons.schedule,
+                  color: AppColors.primaryColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  localizations.deliveryTimeRange,
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    color: AppColors.blackColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Date Range Display
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppColors.primaryColor.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppColors.primaryColor,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${_formatDateTime(order.deliveryStartDate!, order.deliveryStartTime!)} - ${_formatDateTime(order.deliveryEndDate!, order.deliveryEndTime!)}',
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                        color: AppColors.primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    // Fall back to old format for backward compatibility
+    if (order.deliveryDate != null || order.deliveryTime != null) {
+      return Row(
+        children: [
+          // Order Date
+          if (order.deliveryDate != null)
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.lightGrayColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Order Date',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.grayColor),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      order.deliveryDate!,
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.blackColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          
+          if (order.deliveryDate != null && order.deliveryTime != null)
+            const SizedBox(width: 12),
+          
+          // Order Time
+          if (order.deliveryTime != null)
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.lightGrayColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Order Time',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.grayColor),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      order.deliveryTime!,
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.blackColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      );
+    }
+    
+    return const SizedBox.shrink();
+  }
+
+  String _formatDateTime(DateTime date, String time) {
+    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year} $time';
   }
 
   String _generateBarcodeData(OrderModel order) {
@@ -383,6 +510,50 @@ class OrderDetailsView extends StatelessWidget {
       default:
         return 'Unknown';
     }
+  }
+
+  void _showDeleteConfirmation(BuildContext context, OrderModel order, localizations) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(localizations.removeFromCart),
+          content: Text(localizations.removeFromCartConfirmation),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(localizations.cancel),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Delete the order
+                await context.read<OrderCubit>().deleteOrder(order.id);
+                
+                // Close dialog
+                Navigator.of(context).pop();
+                
+                // Go back to history view
+                Navigator.of(context).pop();
+                
+                // Show success message
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(localizations.orderRemovedFromCart),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              child: Text(
+                localizations.remove,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 

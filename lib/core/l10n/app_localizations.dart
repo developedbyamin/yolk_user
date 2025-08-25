@@ -687,6 +687,120 @@ abstract class AppLocalizations {
   /// In az, this message translates to:
   /// **'Məhsul əlavə etmək üçün skan edin'**
   String get scanToAddProducts;
+
+  /// No description provided for @item.
+  ///
+  /// In az, this message translates to:
+  /// **'məhsul'**
+  String get item;
+
+  /// No description provided for @quantity.
+  ///
+  /// In az, this message translates to:
+  /// **'Miq'**
+  String get quantity;
+
+  /// No description provided for @addToCart.
+  ///
+  /// In az, this message translates to:
+  /// **'Səbətə əlavə et'**
+  String get addToCart;
+
+  /// No description provided for @itemsAddedToCart.
+  ///
+  /// In az, this message translates to:
+  /// **'məhsul səbətə əlavə edildi'**
+  String get itemsAddedToCart;
+
+  /// No description provided for @removeFromCart.
+  ///
+  /// In az, this message translates to:
+  /// **'Səbətdən sil'**
+  String get removeFromCart;
+
+  /// No description provided for @removeFromCartConfirmation.
+  ///
+  /// In az, this message translates to:
+  /// **'Bu sifarişi səbətdən silmək istədiyinizdən əminsiniz?'**
+  String get removeFromCartConfirmation;
+
+  /// No description provided for @orderRemovedFromCart.
+  ///
+  /// In az, this message translates to:
+  /// **'Sifariş səbətdən silindi'**
+  String get orderRemovedFromCart;
+
+  /// No description provided for @remove.
+  ///
+  /// In az, this message translates to:
+  /// **'Sil'**
+  String get remove;
+
+  /// No description provided for @deliveryTimeRange.
+  ///
+  /// In az, this message translates to:
+  /// **'Çatdırılma Vaxt Aralığı'**
+  String get deliveryTimeRange;
+
+  /// No description provided for @fromDate.
+  ///
+  /// In az, this message translates to:
+  /// **'Başlanğıc'**
+  String get fromDate;
+
+  /// No description provided for @toDate.
+  ///
+  /// In az, this message translates to:
+  /// **'Son'**
+  String get toDate;
+
+  /// No description provided for @selectStartDate.
+  ///
+  /// In az, this message translates to:
+  /// **'Başlanğıc Tarix Seçin'**
+  String get selectStartDate;
+
+  /// No description provided for @selectEndDate.
+  ///
+  /// In az, this message translates to:
+  /// **'Son Tarix Seçin'**
+  String get selectEndDate;
+
+  /// No description provided for @selectStartTime.
+  ///
+  /// In az, this message translates to:
+  /// **'Başlanğıc Vaxt Seçin'**
+  String get selectStartTime;
+
+  /// No description provided for @selectEndTime.
+  ///
+  /// In az, this message translates to:
+  /// **'Son Vaxt Seçin'**
+  String get selectEndTime;
+
+  /// No description provided for @deliveryWindow.
+  ///
+  /// In az, this message translates to:
+  /// **'Çatdırılma Pəncərəsi'**
+  String get deliveryWindow;
+
+  /// No description provided for @between.
+  ///
+  /// In az, this message translates to:
+  /// **'arasında'**
+  String get between;
+
+  /// No description provided for @and.
+  ///
+  /// In az, this message translates to:
+  /// **'və'**
+  String get and;
+
+  /// No description provided for @youCanDeliverBetween.
+  ///
+  /// In az, this message translates to:
+  /// **'Sifarişimi bu tarixlər arasında çatdıra bilərsiniz'**
+  String get youCanDeliverBetween;
 }
 
 class _AppLocalizationsDelegate

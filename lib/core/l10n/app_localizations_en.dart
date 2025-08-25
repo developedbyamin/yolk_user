@@ -309,4 +309,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanToAddProducts => 'Scan to add products';
+
+  @override
+  String get item => 'item';
+
+  @override
+  String get quantity => 'Qty';
+
+  @override
+  String get addToCart => 'Add to Cart';
+
+  @override
+  String get itemsAddedToCart => 'items added to cart';
+
+  @override
+  String get removeFromCart => 'Remove from Cart';
+
+  @override
+  String get removeFromCartConfirmation =>
+      'Are you sure you want to remove this order from your cart?';
+
+  @override
+  String get orderRemovedFromCart => 'Order removed from cart';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get deliveryTimeRange => 'Delivery Time Range';
+
+  @override
+  String get fromDate => 'From';
+
+  @override
+  String get toDate => 'To';
+
+  @override
+  String get selectStartDate => 'Select Start Date';
+
+  @override
+  String get selectEndDate => 'Select End Date';
+
+  @override
+  String get selectStartTime => 'Select Start Time';
+
+  @override
+  String get selectEndTime => 'Select End Time';
+
+  @override
+  String get deliveryWindow => 'Delivery Window';
+
+  @override
+  String get between => 'between';
+
+  @override
+  String get and => 'and';
+
+  @override
+  String get youCanDeliverBetween =>
+      'You can deliver my order between these dates';
 }

@@ -4,7 +4,6 @@ import 'package:barcode_widget/barcode_widget.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yolla/core/config/constants/app_colors.dart';
 import 'package:yolla/core/extensions/localization_extension.dart';
-import 'package:yolla/core/router/routes.dart';
 import 'package:yolla/src/data/models/product/product_model.dart';
 import 'package:yolla/src/data/models/order/order_model.dart';
 import 'package:yolla/src/presentation/qr/viewmodel/qr_cubit.dart';
@@ -18,8 +17,10 @@ class CheckoutView extends StatefulWidget {
 }
 
 class _CheckoutViewState extends State<CheckoutView> {
-  DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
+  DateTime? _startDate;
+  DateTime? _endDate;
+  TimeOfDay? _startTime;
+  TimeOfDay? _endTime;
 
   @override
   Widget build(BuildContext context) {
@@ -262,85 +263,20 @@ class _CheckoutViewState extends State<CheckoutView> {
                       
                       const SizedBox(height: 16),
                       
-                      // Date and Time Selection Row
-                      Row(
-                        children: [
-                          // Date Selection
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => _selectDate(context),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: AppColors.lightGrayColor,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      localizations.selectDate,
-                                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.grayColor),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    _selectedDate != null
-                                        ? Text(
-                                            '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                                            style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.blackColor,
-                                            ),
-                                          )
-                                        : const Icon(
-                                            Icons.calendar_today,
-                                            color: AppColors.grayColor,
-                                            size: 24,
-                                          ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          
-                          const SizedBox(width: 12),
-                          
-                          // Time Selection
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => _selectTime(context),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: AppColors.lightGrayColor,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      localizations.selectTime,
-                                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.grayColor),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    _selectedTime != null
-                                        ? Text(
-                                            '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
-                                            style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.blackColor,
-                                            ),
-                                          )
-                                        : const Icon(
-                                            Icons.access_time,
-                                            color: AppColors.grayColor,
-                                            size: 24,
-                                          ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                      // Delivery Date Range Section
+                      DeliveryDateRangeWidget(
+                        startDate: _startDate,
+                        endDate: _endDate,
+                        startTime: _startTime,
+                        endTime: _endTime,
+                        onDateRangeChanged: (startDate, endDate, startTime, endTime) {
+                          setState(() {
+                            _startDate = startDate;
+                            _endDate = endDate;
+                            _startTime = startTime;
+                            _endTime = endTime;
+                          });
+                        },
                       ),
                       
                       const SizedBox(height: 16),
@@ -359,11 +295,15 @@ class _CheckoutViewState extends State<CheckoutView> {
                               status: 'pending', // Orders start as pending
                               storeName: 'Bravo',
                               storeAddress: 'Nizami küçəsi 28, Bakı',
-                              deliveryDate: _selectedDate != null 
-                                  ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                                                            deliveryDate: null,
+                              deliveryTime: null,
+                              deliveryStartDate: _startDate,
+                              deliveryEndDate: _endDate,
+                              deliveryStartTime: _startTime != null 
+                                  ? '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}'
                                   : null,
-                              deliveryTime: _selectedTime != null 
-                                  ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
+                              deliveryEndTime: _endTime != null 
+                                  ? '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}'
                                   : null,
                               barcode: _generateBarcodeData(selectedProducts),
                             );
@@ -437,132 +377,7 @@ class _CheckoutViewState extends State<CheckoutView> {
     return '$dateString$timeString$productCount${totalPrice.replaceAll('.', '')}';
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            dialogBackgroundColor: AppColors.whiteColor,
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primaryColor,
-              onPrimary: AppColors.whiteColor,
-              surface: AppColors.whiteColor,
-              onSurface: AppColors.blackColor,
-            ),
-            textTheme: Theme.of(context).textTheme.copyWith(
-              headlineMedium: const TextStyle(color: AppColors.blackColor),
-              bodyMedium: const TextStyle(color: AppColors.blackColor),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
-  }
 
-  Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime ?? TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            dialogBackgroundColor: AppColors.whiteColor,
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primaryColor,
-              onPrimary: AppColors.whiteColor,
-              surface: AppColors.whiteColor,
-              onSurface: AppColors.blackColor,
-            ),
-            textTheme: Theme.of(context).textTheme.copyWith(
-              headlineMedium: const TextStyle(color: AppColors.blackColor),
-              bodyMedium: const TextStyle(color: AppColors.blackColor),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null && picked != _selectedTime) {
-      setState(() {
-        _selectedTime = picked;
-      });
-    }
-  }
-
-  void _showOrderConfirmationDialog(BuildContext context, List<ProductModel> products) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        final localizations = context.localizations;
-        return AlertDialog(
-          title: Text(
-            localizations.orderConfirmation,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              color: AppColors.blackColor,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                localizations.orderConfirmationText(products.length.toString()),
-                style: const TextStyle(color: AppColors.blackColor),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${localizations.total} \$${_calculateTotalPrice(products).toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primaryColor,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                localizations.cancel,
-                style: const TextStyle(color: AppColors.grayColor),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Go back to QR scanner
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(localizations.orderPlacedSuccessfully),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryColor,
-              ),
-              child: Text(
-                localizations.confirmOrder,
-                style: const TextStyle(color: AppColors.whiteColor),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }
 
 class CheckoutProductItem extends StatelessWidget {
@@ -652,6 +467,371 @@ class CheckoutProductItem extends StatelessWidget {
     } else {
       localizedUnit = localizations.pcs;
       return '${quantity.toInt()} $localizedUnit';
+    }
+  }
+}
+
+class DeliveryDateRangeWidget extends StatelessWidget {
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final TimeOfDay? startTime;
+  final TimeOfDay? endTime;
+  final Function(DateTime?, DateTime?, TimeOfDay?, TimeOfDay?) onDateRangeChanged;
+
+  const DeliveryDateRangeWidget({
+    super.key,
+    required this.startDate,
+    required this.endDate,
+    required this.startTime,
+    required this.endTime,
+    required this.onDateRangeChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final localizations = context.localizations;
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.lightGrayColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              const Icon(
+                Icons.schedule,
+                color: AppColors.primaryColor,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                localizations.deliveryTimeRange,
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  color: AppColors.blackColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Description
+          Text(
+            localizations.youCanDeliverBetween,
+            style: Theme.of(context).textTheme.bodySmall!.copyWith(
+              color: AppColors.grayColor,
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Date Range Selection
+          Row(
+            children: [
+              // Start Date & Time
+              Expanded(
+                child: _buildDateTimeSelector(
+                  context,
+                  isStart: true,
+                  date: startDate,
+                  time: startTime,
+                  dateLabel: localizations.fromDate,
+                  onTap: () => _selectStartDateTime(context),
+                ),
+              ),
+              
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(
+                  Icons.arrow_forward,
+                  color: AppColors.grayColor,
+                  size: 20,
+                ),
+              ),
+              
+              // End Date & Time
+              Expanded(
+                child: _buildDateTimeSelector(
+                  context,
+                  isStart: false,
+                  date: endDate,
+                  time: endTime,
+                  dateLabel: localizations.toDate,
+                  onTap: () => _selectEndDateTime(context),
+                ),
+              ),
+            ],
+          ),
+          
+          // Selected Range Display
+          if (startDate != null && endDate != null && startTime != null && endTime != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppColors.primaryColor.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppColors.primaryColor,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${_formatDateTime(startDate!, startTime!)} - ${_formatDateTime(endDate!, endTime!)}',
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                        color: AppColors.primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateTimeSelector(
+    BuildContext context, {
+    required bool isStart,
+    required DateTime? date,
+    required TimeOfDay? time,
+    required String dateLabel,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: date != null && time != null 
+                ? AppColors.primaryColor.withOpacity(0.3)
+                : AppColors.grayColor.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              dateLabel,
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                color: AppColors.grayColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (date != null && time != null) ...[
+              Text(
+                '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}',
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  color: AppColors.blackColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  color: AppColors.primaryColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ] else ...[
+              const Icon(
+                Icons.add_circle_outline,
+                color: AppColors.grayColor,
+                size: 24,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Tap to select',
+                style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                  color: AppColors.grayColor,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDateTime(DateTime date, TimeOfDay time) {
+    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year} ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _selectStartDateTime(BuildContext context) async {
+    final localizations = context.localizations;
+    
+    // First select date
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: startDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      helpText: localizations.selectStartDate,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            dialogBackgroundColor: AppColors.whiteColor,
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primaryColor,
+              onPrimary: AppColors.whiteColor,
+              surface: AppColors.whiteColor,
+              onSurface: AppColors.blackColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate != null) {
+      // Then select time
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: startTime ?? TimeOfDay.now(),
+        helpText: localizations.selectStartTime,
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              dialogBackgroundColor: AppColors.whiteColor,
+              colorScheme: const ColorScheme.light(
+                primary: AppColors.primaryColor,
+                onPrimary: AppColors.whiteColor,
+                surface: AppColors.whiteColor,
+                onSurface: AppColors.blackColor,
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
+
+      if (pickedTime != null) {
+        onDateRangeChanged(pickedDate, endDate, pickedTime, endTime);
+      }
+    }
+  }
+
+  Future<void> _selectEndDateTime(BuildContext context) async {
+    final localizations = context.localizations;
+    
+    // Ensure end date is at least the same as start date
+    final DateTime minDate = startDate ?? DateTime.now();
+    
+    // First select date
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: endDate ?? minDate,
+      firstDate: minDate,
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      helpText: localizations.selectEndDate,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            dialogBackgroundColor: AppColors.whiteColor,
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primaryColor,
+              onPrimary: AppColors.whiteColor,
+              surface: AppColors.whiteColor,
+              onSurface: AppColors.blackColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate != null) {
+      // Then select time
+      TimeOfDay initialTime = endTime ?? TimeOfDay.now();
+      
+      // If it's the same day as start date, ensure end time is after start time
+      if (startDate != null && startTime != null && 
+          pickedDate.year == startDate!.year && 
+          pickedDate.month == startDate!.month && 
+          pickedDate.day == startDate!.day) {
+        
+        final startMinutes = startTime!.hour * 60 + startTime!.minute;
+        final initialMinutes = initialTime.hour * 60 + initialTime.minute;
+        
+        if (initialMinutes <= startMinutes) {
+          // Add 1 hour to start time as minimum end time
+          final newMinutes = startMinutes + 60;
+          initialTime = TimeOfDay(
+            hour: (newMinutes ~/ 60) % 24,
+            minute: newMinutes % 60,
+          );
+        }
+      }
+      
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: initialTime,
+        helpText: localizations.selectEndTime,
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              dialogBackgroundColor: AppColors.whiteColor,
+              colorScheme: const ColorScheme.light(
+                primary: AppColors.primaryColor,
+                onPrimary: AppColors.whiteColor,
+                surface: AppColors.whiteColor,
+                onSurface: AppColors.blackColor,
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
+
+      if (pickedTime != null) {
+        // Validate that end time is after start time if same day
+        if (startDate != null && startTime != null && 
+            pickedDate.year == startDate!.year && 
+            pickedDate.month == startDate!.month && 
+            pickedDate.day == startDate!.day) {
+          
+          final startMinutes = startTime!.hour * 60 + startTime!.minute;
+          final endMinutes = pickedTime.hour * 60 + pickedTime.minute;
+          
+          if (endMinutes <= startMinutes) {
+            // Show error message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('End time must be after start time'),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          }
+        }
+        
+        onDateRangeChanged(startDate, pickedDate, startTime, pickedTime);
+      }
     }
   }
 }

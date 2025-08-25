@@ -53,14 +53,9 @@ class OrderCubit extends Cubit<OrderState> {
   }
 
   Future<void> addOrder(OrderModel order) async {
-    try {
-      final updatedOrders = [order, ...state.orders];
-      await _saveOrders(updatedOrders);
-      
-      emit(state.copyWith(orders: updatedOrders));
-    } catch (e) {
-      emit(state.copyWith(error: 'Failed to add order: $e'));
-    }
+    final updatedOrders = [order, ...state.orders];
+    await _saveOrders(updatedOrders);
+    emit(state.copyWith(orders: updatedOrders));
   }
 
   Future<void> updateOrderStatus(String orderId, String newStatus) async {
@@ -88,6 +83,35 @@ class OrderCubit extends Cubit<OrderState> {
     } catch (e) {
       emit(state.copyWith(error: 'Failed to update order: $e'));
     }
+  }
+
+  Future<void> deleteOrder(String orderId) async {
+    try {
+      final updatedOrders = state.orders.where((order) => order.id != orderId).toList();
+      await _saveOrders(updatedOrders);
+      emit(state.copyWith(orders: updatedOrders));
+    } catch (e) {
+      emit(state.copyWith(error: 'Failed to delete order: $e'));
+    }
+  }
+
+  Future<void> addToCart(List<ProductModel> products) async {
+    final now = DateTime.now();
+    final orderId = '${now.millisecondsSinceEpoch}';
+    final totalPrice = products.fold<double>(0.0, (sum, product) => sum + (product.price * product.quantity));
+    
+    final newOrder = OrderModel(
+      id: orderId,
+      products: products,
+      totalPrice: totalPrice,
+      orderDate: now,
+      status: 'pending',
+      storeName: 'Bravo',
+      storeAddress: 'Nizami küçəsi 28, Bakı',
+      barcode: orderId,
+    );
+
+    await addOrder(newOrder);
   }
 
   Future<void> _saveOrders(List<OrderModel> orders) async {

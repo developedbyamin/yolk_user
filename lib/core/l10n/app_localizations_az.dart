@@ -310,4 +310,63 @@ class AppLocalizationsAz extends AppLocalizations {
 
   @override
   String get scanToAddProducts => 'Məhsul əlavə etmək üçün skan edin';
+
+  @override
+  String get item => 'məhsul';
+
+  @override
+  String get quantity => 'Miq';
+
+  @override
+  String get addToCart => 'Səbətə əlavə et';
+
+  @override
+  String get itemsAddedToCart => 'məhsul səbətə əlavə edildi';
+
+  @override
+  String get removeFromCart => 'Səbətdən sil';
+
+  @override
+  String get removeFromCartConfirmation =>
+      'Bu sifarişi səbətdən silmək istədiyinizdən əminsiniz?';
+
+  @override
+  String get orderRemovedFromCart => 'Sifariş səbətdən silindi';
+
+  @override
+  String get remove => 'Sil';
+
+  @override
+  String get deliveryTimeRange => 'Çatdırılma Vaxt Aralığı';
+
+  @override
+  String get fromDate => 'Başlanğıc';
+
+  @override
+  String get toDate => 'Son';
+
+  @override
+  String get selectStartDate => 'Başlanğıc Tarix Seçin';
+
+  @override
+  String get selectEndDate => 'Son Tarix Seçin';
+
+  @override
+  String get selectStartTime => 'Başlanğıc Vaxt Seçin';
+
+  @override
+  String get selectEndTime => 'Son Vaxt Seçin';
+
+  @override
+  String get deliveryWindow => 'Çatdırılma Pəncərəsi';
+
+  @override
+  String get between => 'arasında';
+
+  @override
+  String get and => 'və';
+
+  @override
+  String get youCanDeliverBetween =>
+      'Sifarişimi bu tarixlər arasında çatdıra bilərsiniz';
 }
